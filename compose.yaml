@@ -1,0 +1,28 @@
+services:
+  emulator:
+    image: codex-android-emulator:api35
+    platform: linux/amd64
+    build:
+      context: .
+      args:
+        ANDROID_API: "35"
+        ACCEPT_ANDROID_LICENSES: ${ACCEPT_ANDROID_LICENSES:-no}
+    init: true
+    devices:
+      - /dev/kvm:/dev/kvm
+    group_add:
+      - "${KVM_GID:?Set KVM_GID to the numeric group ID of /dev/kvm on the Docker host}"
+    shm_size: 1gb
+    mem_limit: 4g
+    cpus: 2.0
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test: ["CMD-SHELL", "test \"$$(adb -s emulator-5554 shell getprop sys.boot_completed 2>/dev/null | tr -d '\\r')\" = 1 && adb -s emulator-5554 shell pm path android >/dev/null 2>&1"]
+      interval: 5s
+      timeout: 10s
+      start_period: 60s
+      retries: 60
+    stop_grace_period: 20s
